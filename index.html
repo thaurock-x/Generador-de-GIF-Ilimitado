@@ -19,11 +19,10 @@
       font-family: system-ui, -apple-system, sans-serif;
       background: var(--bg);
       color: var(--text);
-      padding: 20px 10px;
+      padding: 15px 10px;
       display: flex;
-      flex-direction: column;
+      justify-content: center;
       align-items: center;
-      justify-content: space-between;
       min-height: 100vh;
     }
 
@@ -34,7 +33,6 @@
       padding: 20px;
       border-radius: 16px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-      margin: auto 0;
     }
 
     .header { text-align: center; margin-bottom: 15px; }
@@ -187,8 +185,223 @@
       font-weight: 600;
       font-size: 0.9rem;
     }
+    footer { 
+      text-align: center; 
+      padding: 20px 0; 
+      font-size: 13px; 
+      color: #047857; 
+      margin-top: 20px; 
+    }
 
-    footer {
-      width: 100%;
-      text-align: center;
-      padding: 15px 0 5
+    @media(max-width:800px){
+      .panel { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+  <div class="header">
+    <h2>🎬 Generador de GIF</h2>
+    <p>Conversión rápida y optimizada para móviles</p>
+  </div>
+
+  <div class="dropzone">
+    <p>📁 <strong>Haz clic aquí</strong> para seleccionar imágenes</p>
+    <input type="file" id="images" multiple accept="image/*,.heic,.heif">
+  </div>
+  <div id="loadingText">Procesando imágenes...</div>
+
+  <div class="preview-grid" id="previewGrid"></div>
+
+  <div class="options-grid">
+    <div class="form-group">
+      <label for="resolution">Resolución del GIF</label>
+      <select id="resolution">
+        <option value="16">16 × 16 px — Favicon clásico</option>
+        <option value="32">32 × 32 px — Favicon HD / Avatar micro</option>
+        <option value="64">64 × 64 px — Avatar retro / Foro</option>
+        <option value="128">128 × 128 px — Avatar de app / Chat</option>
+        <option value="256" selected>256 × 256 px — Foto de perfil estándar</option>
+        <option value="500">500 × 500 px — Imagen de producto / Instagram post chico</option>
+        <option value="800">800 × 800 px — Avatar HD / Ilustración digital</option>
+        <option value="1000">1000 × 1000 px — Lienzo base / Master</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="speed">Tiempo por foto (segundos)</label>
+      <input type="number" id="speed" value="0.5" min="0.1" max="5" step="0.1">
+    </div>
+  </div>
+
+  <button class="btn-main" id="generateBtn" onclick="generateGIF()">⚡ Generar GIF</button>
+
+  <div class="status-container" id="statusContainer">
+    <div class="progress-bar-wrap">
+      <div class="progress-bar-fill" id="progressBar"></div>
+    </div>
+    <div class="status-text" id="statusText">Iniciando...</div>
+  </div>
+
+  <div id="preview"></div>
+  <div id="preview"></div>
+
+  <!-- Pon tu footer justo aquí -->
+  <footer>
+    Desarrollado con 💚 por <strong>Thaurock</strong>
+  </footer>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gifshot@0.3.2/build/gifshot.min.js"></script>
+
+<script>
+  let processedFrames = [];
+
+  const fileInput = document.getElementById("images");
+  const previewGrid = document.getElementById("previewGrid");
+  const loadingText = document.getElementById("loadingText");
+
+  fileInput.addEventListener("change", async (e) => {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+
+    loadingText.style.display = "block";
+    fileInput.disabled = true;
+
+    for (let i = 0; i < files.length; i++) {
+      loadingText.textContent = `Optimizando foto ${i + 1} de ${files.length}...`;
+      try {
+        let fileToProcess = files[i];
+
+        const fileName = fileToProcess.name.toLowerCase();
+        if (fileName.endsWith('.heic') || fileName.endsWith('.heif')) {
+          const convertedBlob = await heic2any({
+            blob: fileToProcess,
+            toType: "image/jpeg",
+            quality: 0.6
+          });
+          fileToProcess = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
+        }
+
+        const base64Image = await processImageToCanvas(fileToProcess);
+        processedFrames.push(base64Image);
+        renderThumbnails();
+      } catch (err) {
+        console.error("Error al procesar la imagen:", err);
+      }
+    }
+
+    fileInput.value = "";
+    fileInput.disabled = false;
+    loadingText.style.display = "none";
+  });
+
+  function processImageToCanvas(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          const targetSize = 1000; // Escalado dinámico en memoria
+          canvas.width = targetSize;
+          canvas.height = targetSize;
+
+          const ctx = canvas.getContext("2d");
+          const minDim = Math.min(img.width, img.height);
+          const sx = (img.width - minDim) / 2;
+          const sy = (img.height - minDim) / 2;
+
+          ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, targetSize, targetSize);
+          resolve(canvas.toDataURL("image/jpeg", 0.7));
+        };
+        img.onerror = reject;
+        img.src = e.target.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function removeFile(index) {
+    processedFrames.splice(index, 1);
+    renderThumbnails();
+  }
+
+  function renderThumbnails() {
+    previewGrid.innerHTML = "";
+    processedFrames.forEach((src, index) => {
+      const thumb = document.createElement("div");
+      thumb.className = "thumb-item";
+      thumb.innerHTML = `
+        <img src="${src}" alt="Img ${index + 1}">
+        <button class="remove-btn" onclick="removeFile(${index})">✕</button>
+      `;
+      previewGrid.appendChild(thumb);
+    });
+  }
+
+  function generateGIF() {
+    if (!processedFrames.length) {
+      alert("Por favor, selecciona al menos una imagen.");
+      return;
+    }
+
+    const size = parseInt(document.getElementById("resolution").value);
+    const speed = parseFloat(document.getElementById("speed").value);
+    const generateBtn = document.getElementById("generateBtn");
+    const statusContainer = document.getElementById("statusContainer");
+    const progressBar = document.getElementById("progressBar");
+    const statusText = document.getElementById("statusText");
+    const previewDiv = document.getElementById("preview");
+
+    generateBtn.disabled = true;
+    generateBtn.textContent = "⏳ Creando GIF...";
+    statusContainer.style.display = "block";
+    progressBar.style.width = "15%";
+    statusText.textContent = "Compilando animación...";
+    previewDiv.innerHTML = "";
+
+    setTimeout(() => {
+      gifshot.createGIF({
+        images: processedFrames,
+        gifWidth: size,
+        gifHeight: size,
+        interval: speed,
+        sampleInterval: 10,
+        numWorkers: 2,
+        progressCallback: (p) => {
+          const percent = Math.round(p * 100);
+          progressBar.style.width = percent + "%";
+          statusText.textContent = `Generando GIF: ${percent}%`;
+        }
+      }, function (obj) {
+        generateBtn.disabled = false;
+        generateBtn.textContent = "⚡ Generar GIF";
+
+        if (!obj.error) {
+          progressBar.style.width = "100%";
+          statusText.textContent = "¡GIF creado exitosamente!";
+          previewDiv.innerHTML = `
+            <div class="result-box">
+              <img src="${obj.image}" alt="GIF Resultante">
+              <br>
+              <a href="${obj.image}" download="animacion.gif" class="btn-download">
+                ⬇ Descargar GIF (${size}x${size}px)
+              </a>
+            </div>
+          `;
+        } else {
+          statusContainer.style.display = "none";
+          alert("Ocurrió un error al compilar el GIF.");
+        }
+      });
+    }, 100);
+  }
+</script>
+
+</body>
+</html>
