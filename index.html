@@ -3,9 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Generador de GIF Profesional</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
+  <title>Generador de GIF Pro</title>
   <style>
     :root {
       --primary: #2e7d32;
@@ -20,10 +18,10 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: var(--bg-color);
       color: var(--text-main);
-      padding: 20px 10px;
+      padding: 15px 10px;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -32,54 +30,43 @@
 
     .container {
       width: 100%;
-      max-width: 600px;
+      max-width: 520px;
       background: var(--card-bg);
-      padding: 25px;
+      padding: 20px;
       border-radius: 16px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
     }
 
     .header {
       text-align: center;
-      margin-bottom: 20px;
+      margin-bottom: 15px;
     }
 
     .header h2 {
       color: var(--primary);
-      font-size: 1.8rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
+      font-size: 1.6rem;
     }
 
     .header p {
       color: var(--text-muted);
-      font-size: 0.9rem;
-      margin-top: 5px;
+      font-size: 0.85rem;
+      margin-top: 4px;
     }
 
-    /* Area Dropzone */
+    /* Dropzone */
     .dropzone {
       border: 2px dashed #a5d6a7;
       background: #f1f8e9;
       border-radius: 12px;
-      padding: 25px 15px;
+      padding: 20px 10px;
       text-align: center;
       cursor: pointer;
-      transition: all 0.3s ease;
       position: relative;
     }
 
-    .dropzone:hover, .dropzone.dragover {
-      background: #e8f5e9;
-      border-color: var(--primary);
-    }
-
-    .dropzone i {
-      font-size: 2.2rem;
-      color: var(--primary);
-      margin-bottom: 8px;
+    .dropzone p {
+      font-size: 0.95rem;
+      color: #333;
     }
 
     .dropzone input[type="file"] {
@@ -89,15 +76,25 @@
       cursor: pointer;
     }
 
-    /* Miniaturas Previsualización */
+    /* Indicador de carga de archivos */
+    #loadingFiles {
+      display: none;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--primary);
+      margin-top: 8px;
+      font-weight: 600;
+    }
+
+    /* Miniaturas */
     .preview-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-      gap: 10px;
-      margin-top: 15px;
-      max-height: 220px;
+      grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
+      gap: 8px;
+      margin-top: 12px;
+      max-height: 200px;
       overflow-y: auto;
-      padding: 5px;
+      padding: 4px;
       border: 1px solid #f0f0f0;
       border-radius: 8px;
     }
@@ -105,11 +102,10 @@
     .thumb-item {
       position: relative;
       width: 100%;
-      height: 80px;
-      border-radius: 8px;
+      height: 75px;
+      border-radius: 6px;
       overflow: hidden;
       border: 1px solid var(--border-color);
-      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
       background: #eee;
     }
 
@@ -122,26 +118,26 @@
 
     .thumb-item .remove-btn {
       position: absolute;
-      top: 4px; right: 4px;
-      background: rgba(221, 44, 0, 0.9);
+      top: 2px; right: 2px;
+      background: rgba(220, 38, 38, 0.9);
       color: white;
       border: none;
       border-radius: 50%;
-      width: 22px; height: 22px;
+      width: 20px; height: 20px;
       font-size: 11px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      z-index: 2;
+      font-weight: bold;
     }
 
-    /* Formularios y Opciones */
+    /* Opciones */
     .options-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 15px;
-      margin-top: 20px;
+      gap: 12px;
+      margin-top: 15px;
     }
 
     .form-group {
@@ -150,82 +146,68 @@
     }
 
     label {
-      font-size: 0.85rem;
-      font-weight: 600;
+      font-size: 0.8rem;
+      font-weight: 700;
       color: var(--text-main);
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
 
     input, select {
-      padding: 10px 12px;
+      padding: 8px 10px;
       border: 1px solid var(--border-color);
       border-radius: 8px;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       outline: none;
-      transition: border 0.2s;
+      background: #fff;
     }
 
-    input:focus, select:focus {
-      border-color: var(--primary);
-    }
-
-    /* Botón de Acción */
+    /* Botón */
     .btn-main {
       width: 100%;
       background: var(--primary);
       color: white;
       border: none;
-      padding: 14px;
-      border-radius: 10px;
-      font-size: 1rem;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 0.95rem;
       font-weight: 600;
       cursor: pointer;
-      margin-top: 20px;
+      margin-top: 15px;
       transition: background 0.2s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
     }
 
-    .btn-main:hover {
-      background: var(--primary-hover);
-    }
+    .btn-main:hover { background: var(--primary-hover); }
+    .btn-main:disabled { background: #ccc; cursor: not-allowed; }
 
-    .btn-main:disabled {
-      background: #ccc;
-      cursor: not-allowed;
-    }
-
-    /* Sección de Estado y Resultados */
+    /* Estado */
     .status-container {
-      margin-top: 20px;
+      margin-top: 15px;
       display: none;
     }
 
     .progress-bar-wrap {
       background: #e0e0e0;
-      border-radius: 20px;
-      height: 12px;
+      border-radius: 10px;
+      height: 10px;
       overflow: hidden;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
 
     .progress-bar-fill {
       height: 100%;
       background: var(--primary);
       width: 0%;
-      transition: width 0.2s;
+      transition: width 0.15s;
     }
 
     .status-text {
       text-align: center;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
       color: var(--text-muted);
     }
 
     .result-box {
-      margin-top: 20px;
+      margin-top: 15px;
       text-align: center;
       padding-top: 15px;
       border-top: 1px dashed var(--border-color);
@@ -234,24 +216,20 @@
     .result-box img {
       max-width: 100%;
       border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      margin-bottom: 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      margin-bottom: 12px;
     }
 
     .btn-download {
       background: #0288d1;
       color: white;
       text-decoration: none;
-      padding: 10px 20px;
+      padding: 10px 18px;
       border-radius: 8px;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
+      display: inline-block;
       font-weight: 600;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
     }
-
-    .btn-download:hover { background: #01579b; }
   </style>
 </head>
 
@@ -259,93 +237,84 @@
 
 <div class="container">
   <div class="header">
-    <h2><i class="fa-solid fa-film"></i> Generador de GIF</h2>
-    <p>Convierte tus imágenes en un GIF animado en segundos</p>
+    <h2>🎬 Generador de GIF</h2>
+    <p>Selecciona tus imágenes y crea tu animación</p>
   </div>
 
+  <!-- Zona de Carga -->
   <div class="dropzone" id="dropzone">
-    <i class="fa-solid fa-cloud-arrow-up"></i>
-    <p><strong>Arrastra tus imágenes aquí</strong> o haz clic para seleccionar</p>
+    <p>📁 <strong>Haz clic aquí</strong> o arrastra tus imágenes</p>
     <input type="file" id="images" multiple accept="image/*">
   </div>
+  <div id="loadingFiles">Cargando imágenes...</div>
 
+  <!-- Lista de Previsualización -->
   <div class="preview-grid" id="previewGrid"></div>
 
+  <!-- Opciones -->
   <div class="options-grid">
     <div class="form-group">
-      <label for="resolution"><i class="fa-solid fa-expand"></i> Resolución (px)</label>
+      <label for="resolution">Resolución (px)</label>
       <select id="resolution">
-        <option value="200">200 x 200 (Ligera)</option>
-        <option value="300">300 x 300 (Rápida)</option>
-        <option value="400" selected>400 x 400 (Recomendada)</option>
-        <option value="500">500 x 500 (Media)</option>
-        <option value="600">600 x 600 (Alta)</option>
+        <option value="200">200 x 200 (Rápido)</option>
+        <option value="300" selected>300 x 300 (Recomendado)</option>
+        <option value="400">400 x 400 (Buena calidad)</option>
+        <option value="500">500 x 500 (HD)</option>
       </select>
     </div>
 
     <div class="form-group">
-      <label for="speed"><i class="fa-solid fa-gauge-high"></i> Tiempo por foto (seg)</label>
+      <label for="speed">Tiempo por foto (seg)</label>
       <input type="number" id="speed" value="0.5" min="0.1" max="5" step="0.1">
     </div>
   </div>
 
-  <button class="btn-main" id="generateBtn" onclick="generateGIF()">
-    <i class="fa-solid fa-wand-magic-sparkles"></i> Generar GIF
-  </button>
+  <button class="btn-main" id="generateBtn" onclick="generateGIF()">⚡ Generar GIF</button>
 
+  <!-- Progreso -->
   <div class="status-container" id="statusContainer">
     <div class="progress-bar-wrap">
       <div class="progress-bar-fill" id="progressBar"></div>
     </div>
-    <div class="status-text" id="statusText">Procesando imágenes: 0%</div>
+    <div class="status-text" id="statusText">Iniciando...</div>
   </div>
 
+  <!-- Resultado -->
   <div id="preview"></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/gifshot@0.3.2/build/gifshot.min.js"></script>
 
 <script>
-  let imageBase64List = [];
+  let imageFiles = [];
 
   const fileInput = document.getElementById("images");
   const previewGrid = document.getElementById("previewGrid");
-  const dropzone = document.getElementById("dropzone");
-
-  // Drag & Drop
-  dropzone.addEventListener("dragover", (e) => {
-    e.preventDefault();
-    dropzone.classList.add("dragover");
-  });
-
-  dropzone.addEventListener("dragleave", () => {
-    dropzone.classList.remove("dragover");
-  });
-
-  dropzone.addEventListener("drop", (e) => {
-    e.preventDefault();
-    dropzone.classList.remove("dragover");
-    if (e.dataTransfer.files.length) {
-      handleFiles(Array.from(e.dataTransfer.files));
-    }
-  });
+  const loadingFiles = document.getElementById("loadingFiles");
 
   fileInput.addEventListener("change", (e) => {
-    handleFiles(Array.from(e.target.files));
+    if (e.target.files.length) {
+      handleFiles(Array.from(e.target.files));
+    }
   });
 
   async function handleFiles(files) {
-    const validImages = files.filter(file => file.type.startsWith('image/'));
+    const validFiles = files.filter(f => f.type.startsWith('image/'));
+    if (!validFiles.length) return;
+
+    loadingFiles.style.display = "block";
     
-    for (const file of validImages) {
-      const base64 = await fileToBase64(file);
-      imageBase64List.push(base64);
+    for (const file of validFiles) {
+      const src = await readFileAsDataURL(file);
+      imageFiles.push({ file, src });
     }
+    
     fileInput.value = ""; 
+    loadingFiles.style.display = "none";
     renderThumbnails();
   }
 
-  function fileToBase64(file) {
+  function readFileAsDataURL(file) {
     return new Promise((resolve) => {
       const reader = new FileReader();
       reader.onload = (e) => resolve(e.target.result);
@@ -354,40 +323,119 @@
   }
 
   function removeFile(index) {
-    imageBase64List.splice(index, 1);
+    imageFiles.splice(index, 1);
     renderThumbnails();
   }
 
   function renderThumbnails() {
     previewGrid.innerHTML = "";
-    imageBase64List.forEach((src, index) => {
+    imageFiles.forEach((item, index) => {
       const thumb = document.createElement("div");
       thumb.className = "thumb-item";
       thumb.innerHTML = `
-        <img src="${src}" alt="Imagen ${index + 1}">
-        <button class="remove-btn" onclick="removeFile(${index})"><i class="fa-solid fa-xmark"></i></button>
+        <img src="${item.src}" alt="Img ${index + 1}">
+        <button class="remove-btn" onclick="removeFile(${index})">✕</button>
       `;
       previewGrid.appendChild(thumb);
     });
   }
 
-  // Pre-procesa y redimensiona imágenes en Canvas para evitar colapsar la RAM de gifshot
-  function resizeImage(base64, targetSize) {
+  // Redimensiona cada imagen en Canvas para no saturar memoria RAM
+  function processCanvasImage(dataUrl, size) {
     return new Promise((resolve) => {
       const img = new Image();
       img.onload = () => {
         const canvas = document.createElement("canvas");
-        canvas.width = targetSize;
-        canvas.height = targetSize;
+        canvas.width = size;
+        canvas.height = size;
         const ctx = canvas.getContext("2d");
-        
-        // Mantener proporción recortando al centro
+
+        // Ajuste proporcional centrado
         const minDim = Math.min(img.width, img.height);
         const sx = (img.width - minDim) / 2;
         const sy = (img.height - minDim) / 2;
 
-        ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, targetSize, targetSize);
-        resolve(canvas.toDataURL("image/jpeg", 0.85));
+        ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, size, size);
+        resolve(canvas.toDataURL("image/jpeg", 0.8));
       };
-      img.src = base64;
+      img.src = dataUrl;
     });
+  }
+
+  async function generateGIF() {
+    if (!imageFiles.length) {
+      alert("Por favor, selecciona al menos una imagen.");
+      return;
+    }
+
+    const size = parseInt(document.getElementById("resolution").value);
+    const speed = parseFloat(document.getElementById("speed").value);
+    const generateBtn = document.getElementById("generateBtn");
+    const statusContainer = document.getElementById("statusContainer");
+    const progressBar = document.getElementById("progressBar");
+    const statusText = document.getElementById("statusText");
+    const previewDiv = document.getElementById("preview");
+
+    generateBtn.disabled = true;
+    generateBtn.textContent = "⏳ Procesando...";
+    statusContainer.style.display = "block";
+    progressBar.style.width = "5%";
+    statusText.textContent = "Preparando imágenes...";
+    previewDiv.innerHTML = "";
+
+    try {
+      const processedImages = [];
+      for (let i = 0; i < imageFiles.length; i++) {
+        const resizedSrc = await processCanvasImage(imageFiles[i].src, size);
+        processedImages.push(resizedSrc);
+        const p = Math.round(((i + 1) / imageFiles.length) * 40);
+        progressBar.style.width = p + "%";
+        statusText.textContent = `Ajustando resolución: ${p}%`;
+      }
+
+      statusText.textContent = "Creando GIF...";
+
+      gifshot.createGIF({
+        images: processedImages,
+        gifWidth: size,
+        gifHeight: size,
+        interval: speed,
+        numWorkers: 2,
+        progressCallback: (p) => {
+          const percent = 40 + Math.round(p * 60);
+          progressBar.style.width = percent + "%";
+          statusText.textContent = `Compilando GIF: ${percent}%`;
+        }
+      }, function (obj) {
+        generateBtn.disabled = false;
+        generateBtn.textContent = "⚡ Generar GIF";
+
+        if (!obj.error) {
+          progressBar.style.width = "100%";
+          statusText.textContent = "¡Listo!";
+          previewDiv.innerHTML = `
+            <div class="result-box">
+              <img src="${obj.image}" alt="GIF Resultante">
+              <br>
+              <a href="${obj.image}" download="animacion.gif" class="btn-download">
+                ⬇ Descargar GIF
+              </a>
+            </div>
+          `;
+        } else {
+          statusContainer.style.display = "none";
+          alert("No se pudo crear el GIF. Intenta con una resolución más baja (ej. 200x200).");
+        }
+      });
+
+    } catch (e) {
+      generateBtn.disabled = false;
+      generateBtn.textContent = "⚡ Generar GIF";
+      statusContainer.style.display = "none";
+      alert("Ocurrió un error inesperado al procesar las imágenes.");
+    }
+  }
+</script>
+
+</body>
+</html>
