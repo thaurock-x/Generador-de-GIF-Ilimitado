@@ -3,24 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Generador de GIF Pro</title>
+  <title>Generador de GIF Ultra Estable</title>
   <style>
     :root {
       --primary: #2e7d32;
       --primary-hover: #1b5e20;
-      --bg-color: #f4f6f8;
-      --card-bg: #ffffff;
-      --border-color: #e0e0e0;
-      --text-main: #333333;
-      --text-muted: #666666;
+      --bg: #f4f6f8;
+      --card: #ffffff;
+      --border: #e0e0e0;
+      --text: #333333;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: var(--bg-color);
-      color: var(--text-main);
+      font-family: system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
       padding: 15px 10px;
       display: flex;
       justify-content: center;
@@ -30,30 +29,17 @@
 
     .container {
       width: 100%;
-      max-width: 520px;
-      background: var(--card-bg);
+      max-width: 500px;
+      background: var(--card);
       padding: 20px;
       border-radius: 16px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
     }
 
-    .header {
-      text-align: center;
-      margin-bottom: 15px;
-    }
+    .header { text-align: center; margin-bottom: 15px; }
+    .header h2 { color: var(--primary); font-size: 1.5rem; }
+    .header p { color: #666; font-size: 0.85rem; margin-top: 4px; }
 
-    .header h2 {
-      color: var(--primary);
-      font-size: 1.6rem;
-    }
-
-    .header p {
-      color: var(--text-muted);
-      font-size: 0.85rem;
-      margin-top: 4px;
-    }
-
-    /* Dropzone */
     .dropzone {
       border: 2px dashed #a5d6a7;
       background: #f1f8e9;
@@ -64,11 +50,6 @@
       position: relative;
     }
 
-    .dropzone p {
-      font-size: 0.95rem;
-      color: #333;
-    }
-
     .dropzone input[type="file"] {
       position: absolute;
       top: 0; left: 0; width: 100%; height: 100%;
@@ -76,7 +57,6 @@
       cursor: pointer;
     }
 
-    /* Indicador de carga de archivos */
     #loadingFiles {
       display: none;
       text-align: center;
@@ -86,7 +66,6 @@
       font-weight: 600;
     }
 
-    /* Miniaturas */
     .preview-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(75px, 1fr));
@@ -105,7 +84,7 @@
       height: 75px;
       border-radius: 6px;
       overflow: hidden;
-      border: 1px solid var(--border-color);
+      border: 1px solid var(--border);
       background: #eee;
     }
 
@@ -132,7 +111,6 @@
       font-weight: bold;
     }
 
-    /* Opciones */
     .options-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -140,28 +118,17 @@
       margin-top: 15px;
     }
 
-    .form-group {
-      display: flex;
-      flex-direction: column;
-    }
-
-    label {
-      font-size: 0.8rem;
-      font-weight: 700;
-      color: var(--text-main);
-      margin-bottom: 4px;
-    }
+    .form-group { display: flex; flex-direction: column; }
+    label { font-size: 0.8rem; font-weight: 700; margin-bottom: 4px; }
 
     input, select {
       padding: 8px 10px;
-      border: 1px solid var(--border-color);
+      border: 1px solid var(--border);
       border-radius: 8px;
       font-size: 0.9rem;
-      outline: none;
       background: #fff;
     }
 
-    /* Botón */
     .btn-main {
       width: 100%;
       background: var(--primary);
@@ -173,18 +140,12 @@
       font-weight: 600;
       cursor: pointer;
       margin-top: 15px;
-      transition: background 0.2s;
     }
 
     .btn-main:hover { background: var(--primary-hover); }
     .btn-main:disabled { background: #ccc; cursor: not-allowed; }
 
-    /* Estado */
-    .status-container {
-      margin-top: 15px;
-      display: none;
-    }
-
+    .status-container { margin-top: 15px; display: none; }
     .progress-bar-wrap {
       background: #e0e0e0;
       border-radius: 10px;
@@ -197,20 +158,16 @@
       height: 100%;
       background: var(--primary);
       width: 0%;
-      transition: width 0.15s;
+      transition: width 0.1s;
     }
 
-    .status-text {
-      text-align: center;
-      font-size: 0.8rem;
-      color: var(--text-muted);
-    }
+    .status-text { text-align: center; font-size: 0.8rem; color: #666; }
 
     .result-box {
       margin-top: 15px;
       text-align: center;
       padding-top: 15px;
-      border-top: 1px dashed var(--border-color);
+      border-top: 1px dashed var(--border);
     }
 
     .result-box img {
@@ -237,29 +194,25 @@
 
 <div class="container">
   <div class="header">
-    <h2>🎬 Generador de GIF</h2>
-    <p>Selecciona tus imágenes y crea tu animación</p>
+    <h2>🎬 Generador de GIF Pro</h2>
+    <p>Sube varias imágenes sin bloqueos</p>
   </div>
 
-  <!-- Zona de Carga -->
-  <div class="dropzone" id="dropzone">
-    <p>📁 <strong>Haz clic aquí</strong> o arrastra tus imágenes</p>
+  <div class="dropzone">
+    <p>📁 <strong>Haz clic aquí</strong> para seleccionar imágenes</p>
     <input type="file" id="images" multiple accept="image/*">
   </div>
-  <div id="loadingFiles">Cargando imágenes...</div>
+  <div id="loadingFiles">Procesando imágenes... (0/0)</div>
 
-  <!-- Lista de Previsualización -->
   <div class="preview-grid" id="previewGrid"></div>
 
-  <!-- Opciones -->
   <div class="options-grid">
     <div class="form-group">
       <label for="resolution">Resolución (px)</label>
       <select id="resolution">
-        <option value="200">200 x 200 (Rápido)</option>
-        <option value="300" selected>300 x 300 (Recomendado)</option>
-        <option value="400">400 x 400 (Buena calidad)</option>
-        <option value="500">500 x 500 (HD)</option>
+        <option value="250">250 x 250 (Rápida)</option>
+        <option value="350" selected>350 x 350 (Recomendada)</option>
+        <option value="500">500 x 500 (Alta)</option>
       </select>
     </div>
 
@@ -271,7 +224,6 @@
 
   <button class="btn-main" id="generateBtn" onclick="generateGIF()">⚡ Generar GIF</button>
 
-  <!-- Progreso -->
   <div class="status-container" id="statusContainer">
     <div class="progress-bar-wrap">
       <div class="progress-bar-fill" id="progressBar"></div>
@@ -279,91 +231,93 @@
     <div class="status-text" id="statusText">Iniciando...</div>
   </div>
 
-  <!-- Resultado -->
   <div id="preview"></div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/gifshot@0.3.2/build/gifshot.min.js"></script>
 
 <script>
-  let imageFiles = [];
+  let imageList = []; 
 
   const fileInput = document.getElementById("images");
   const previewGrid = document.getElementById("previewGrid");
   const loadingFiles = document.getElementById("loadingFiles");
 
-  fileInput.addEventListener("change", (e) => {
-    if (e.target.files.length) {
-      handleFiles(Array.from(e.target.files));
-    }
-  });
-
-  async function handleFiles(files) {
-    const validFiles = files.filter(f => f.type.startsWith('image/'));
-    if (!validFiles.length) return;
+  fileInput.addEventListener("change", async (e) => {
+    const files = Array.from(e.target.files).filter(f => f.type.startsWith('image/'));
+    if (!files.length) return;
 
     loadingFiles.style.display = "block";
-    
-    for (const file of validFiles) {
-      const src = await readFileAsDataURL(file);
-      imageFiles.push({ file, src });
-    }
-    
-    fileInput.value = ""; 
-    loadingFiles.style.display = "none";
-    renderThumbnails();
-  }
+    fileInput.disabled = true;
 
-  function readFileAsDataURL(file) {
-    return new Promise((resolve) => {
+    // Procesamiento secuencial para proteger la memoria RAM del navegador
+    for (let i = 0; i < files.length; i++) {
+      loadingFiles.textContent = `Procesando imágenes... (${i + 1}/${files.length})`;
+      try {
+        const compressedDataUrl = await processAndCompress(files[i]);
+        imageList.push(compressedDataUrl);
+        renderThumbnails();
+      } catch (err) {
+        console.error("Error cargando imagen", err);
+      }
+    }
+
+    fileInput.value = "";
+    fileInput.disabled = false;
+    loadingFiles.style.display = "none";
+  });
+
+  // Reduce y optimiza la imagen antes de subirla al array de memoria
+  function processAndCompress(file) {
+    return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onload = (e) => resolve(e.target.result);
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          const maxDim = 600; // Límite de resolución interna
+          let w = img.width;
+          let h = img.height;
+
+          if (w > maxDim || h > maxDim) {
+            if (w > h) { h = Math.round((h * maxDim) / w); w = maxDim; }
+            else { w = Math.round((w * maxDim) / h); h = maxDim; }
+          }
+
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL("image/jpeg", 0.8));
+        };
+        img.onerror = reject;
+        img.src = e.target.result;
+      };
+      reader.onerror = reject;
       reader.readAsDataURL(file);
     });
   }
 
   function removeFile(index) {
-    imageFiles.splice(index, 1);
+    imageList.splice(index, 1);
     renderThumbnails();
   }
 
   function renderThumbnails() {
     previewGrid.innerHTML = "";
-    imageFiles.forEach((item, index) => {
+    imageList.forEach((src, index) => {
       const thumb = document.createElement("div");
       thumb.className = "thumb-item";
       thumb.innerHTML = `
-        <img src="${item.src}" alt="Img ${index + 1}">
+        <img src="${src}" alt="Foto ${index + 1}">
         <button class="remove-btn" onclick="removeFile(${index})">✕</button>
       `;
       previewGrid.appendChild(thumb);
     });
   }
 
-  // Redimensiona cada imagen en Canvas para no saturar memoria RAM
-  function processCanvasImage(dataUrl, size) {
-    return new Promise((resolve) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        canvas.width = size;
-        canvas.height = size;
-        const ctx = canvas.getContext("2d");
-
-        // Ajuste proporcional centrado
-        const minDim = Math.min(img.width, img.height);
-        const sx = (img.width - minDim) / 2;
-        const sy = (img.height - minDim) / 2;
-
-        ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, size, size);
-        resolve(canvas.toDataURL("image/jpeg", 0.8));
-      };
-      img.src = dataUrl;
-    });
-  }
-
-  async function generateGIF() {
-    if (!imageFiles.length) {
+  function generateGIF() {
+    if (!imageList.length) {
       alert("Por favor, selecciona al menos una imagen.");
       return;
     }
@@ -377,63 +331,44 @@
     const previewDiv = document.getElementById("preview");
 
     generateBtn.disabled = true;
-    generateBtn.textContent = "⏳ Procesando...";
+    generateBtn.textContent = "⏳ Creando animación...";
     statusContainer.style.display = "block";
-    progressBar.style.width = "5%";
-    statusText.textContent = "Preparando imágenes...";
+    progressBar.style.width = "10%";
+    statusText.textContent = "Ensamblando fotogramas...";
     previewDiv.innerHTML = "";
 
-    try {
-      const processedImages = [];
-      for (let i = 0; i < imageFiles.length; i++) {
-        const resizedSrc = await processCanvasImage(imageFiles[i].src, size);
-        processedImages.push(resizedSrc);
-        const p = Math.round(((i + 1) / imageFiles.length) * 40);
-        progressBar.style.width = p + "%";
-        statusText.textContent = `Ajustando resolución: ${p}%`;
+    gifshot.createGIF({
+      images: imageList,
+      gifWidth: size,
+      gifHeight: size,
+      interval: speed,
+      numWorkers: 2,
+      progressCallback: (p) => {
+        const percent = Math.round(p * 100);
+        progressBar.style.width = percent + "%";
+        statusText.textContent = `Generando GIF: ${percent}%`;
       }
-
-      statusText.textContent = "Creando GIF...";
-
-      gifshot.createGIF({
-        images: processedImages,
-        gifWidth: size,
-        gifHeight: size,
-        interval: speed,
-        numWorkers: 2,
-        progressCallback: (p) => {
-          const percent = 40 + Math.round(p * 60);
-          progressBar.style.width = percent + "%";
-          statusText.textContent = `Compilando GIF: ${percent}%`;
-        }
-      }, function (obj) {
-        generateBtn.disabled = false;
-        generateBtn.textContent = "⚡ Generar GIF";
-
-        if (!obj.error) {
-          progressBar.style.width = "100%";
-          statusText.textContent = "¡Listo!";
-          previewDiv.innerHTML = `
-            <div class="result-box">
-              <img src="${obj.image}" alt="GIF Resultante">
-              <br>
-              <a href="${obj.image}" download="animacion.gif" class="btn-download">
-                ⬇ Descargar GIF
-              </a>
-            </div>
-          `;
-        } else {
-          statusContainer.style.display = "none";
-          alert("No se pudo crear el GIF. Intenta con una resolución más baja (ej. 200x200).");
-        }
-      });
-
-    } catch (e) {
+    }, function (obj) {
       generateBtn.disabled = false;
       generateBtn.textContent = "⚡ Generar GIF";
-      statusContainer.style.display = "none";
-      alert("Ocurrió un error inesperado al procesar las imágenes.");
-    }
+
+      if (!obj.error) {
+        progressBar.style.width = "100%";
+        statusText.textContent = "¡Completado con éxito!";
+        previewDiv.innerHTML = `
+          <div class="result-box">
+            <img src="${obj.image}" alt="GIF Resultante">
+            <br>
+            <a href="${obj.image}" download="animacion.gif" class="btn-download">
+              ⬇ Descargar GIF
+            </a>
+          </div>
+        `;
+      } else {
+        statusContainer.style.display = "none";
+        alert("Ocurrió un error al procesar. Intenta usando menos imágenes o seleccionando resolución 250px.");
+      }
+    });
   }
 </script>
 
