@@ -64,7 +64,7 @@
       border: 2px dashed #a5d6a7;
       background: #f1f8e9;
       border-radius: 12px;
-      padding: 30px 15px;
+      padding: 25px 15px;
       text-align: center;
       cursor: pointer;
       transition: all 0.3s ease;
@@ -77,9 +77,9 @@
     }
 
     .dropzone i {
-      font-size: 2.5rem;
+      font-size: 2.2rem;
       color: var(--primary);
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
     .dropzone input[type="file"] {
@@ -92,44 +92,48 @@
     /* Miniaturas Previsualización */
     .preview-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
       gap: 10px;
       margin-top: 15px;
-      max-height: 180px;
+      max-height: 220px;
       overflow-y: auto;
       padding: 5px;
+      border: 1px solid #f0f0f0;
+      border-radius: 8px;
     }
 
     .thumb-item {
       position: relative;
       width: 100%;
-      padding-top: 100%;
+      height: 80px;
       border-radius: 8px;
       overflow: hidden;
       border: 1px solid var(--border-color);
       box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      background: #eee;
     }
 
     .thumb-item img {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
+      width: 100%;
+      height: 100%;
       object-fit: cover;
+      display: block;
     }
 
     .thumb-item .remove-btn {
       position: absolute;
-      top: 3px; right: 3px;
-      background: rgba(221, 44, 0, 0.85);
+      top: 4px; right: 4px;
+      background: rgba(221, 44, 0, 0.9);
       color: white;
       border: none;
       border-radius: 50%;
-      width: 18px; height: 18px;
-      font-size: 10px;
+      width: 22px; height: 22px;
+      font-size: 11px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
+      z-index: 2;
     }
 
     /* Formularios y Opciones */
@@ -177,7 +181,7 @@
       font-weight: 600;
       cursor: pointer;
       margin-top: 20px;
-      transition: background 0.2s, transform 0.1s;
+      transition: background 0.2s;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -271,12 +275,11 @@
     <div class="form-group">
       <label for="resolution"><i class="fa-solid fa-expand"></i> Resolución (px)</label>
       <select id="resolution">
-        <option value="200">200 x 200 (Baja)</option>
+        <option value="200">200 x 200 (Ligera)</option>
         <option value="300">300 x 300 (Rápida)</option>
         <option value="400" selected>400 x 400 (Recomendada)</option>
         <option value="500">500 x 500 (Media)</option>
         <option value="600">600 x 600 (Alta)</option>
-        <option value="800">800 x 800 (HD)</option>
       </select>
     </div>
 
@@ -303,7 +306,7 @@
 <script src="https://cdn.jsdelivr.net/npm/gifshot@0.3.2/build/gifshot.min.js"></script>
 
 <script>
-  let selectedFiles = [];
+  let imageBase64List = [];
 
   const fileInput = document.getElementById("images");
   const previewGrid = document.getElementById("previewGrid");
@@ -331,93 +334,60 @@
     handleFiles(Array.from(e.target.files));
   });
 
-  function handleFiles(files) {
+  async function handleFiles(files) {
     const validImages = files.filter(file => file.type.startsWith('image/'));
-    selectedFiles = [...selectedFiles, ...validImages];
-    fileInput.value = ""; // Limpiar input para permitir seleccionar mismo archivo de nuevo
+    
+    for (const file of validImages) {
+      const base64 = await fileToBase64(file);
+      imageBase64List.push(base64);
+    }
+    fileInput.value = ""; 
     renderThumbnails();
   }
 
+  function fileToBase64(file) {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target.result);
+      reader.readAsDataURL(file);
+    });
+  }
+
   function removeFile(index) {
-    selectedFiles.splice(index, 1);
+    imageBase64List.splice(index, 1);
     renderThumbnails();
   }
 
   function renderThumbnails() {
     previewGrid.innerHTML = "";
-    selectedFiles.forEach((file, index) => {
-      const url = URL.createObjectURL(file);
+    imageBase64List.forEach((src, index) => {
       const thumb = document.createElement("div");
       thumb.className = "thumb-item";
       thumb.innerHTML = `
-        <img src="${url}" alt="Frame ${index + 1}">
+        <img src="${src}" alt="Imagen ${index + 1}">
         <button class="remove-btn" onclick="removeFile(${index})"><i class="fa-solid fa-xmark"></i></button>
       `;
       previewGrid.appendChild(thumb);
     });
   }
 
-  function generateGIF() {
-    if (!selectedFiles.length) {
-      alert("Por favor, selecciona al menos una imagen.");
-      return;
-    }
+  // Pre-procesa y redimensiona imágenes en Canvas para evitar colapsar la RAM de gifshot
+  function resizeImage(base64, targetSize) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = targetSize;
+        canvas.height = targetSize;
+        const ctx = canvas.getContext("2d");
+        
+        // Mantener proporción recortando al centro
+        const minDim = Math.min(img.width, img.height);
+        const sx = (img.width - minDim) / 2;
+        const sy = (img.height - minDim) / 2;
 
-    const size = parseInt(document.getElementById("resolution").value);
-    const speed = parseFloat(document.getElementById("speed").value);
-    const generateBtn = document.getElementById("generateBtn");
-    const statusContainer = document.getElementById("statusContainer");
-    const progressBar = document.getElementById("progressBar");
-    const statusText = document.getElementById("statusText");
-    const previewDiv = document.getElementById("preview");
-
-    // UI Updates
-    generateBtn.disabled = true;
-    generateBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Generando...`;
-    statusContainer.style.display = "block";
-    progressBar.style.width = "0%";
-    statusText.textContent = "Iniciando codificación: 0%";
-    previewDiv.innerHTML = "";
-
-    // Convertir imágenes a Blob URLs
-    const imageUrls = selectedFiles.map(file => URL.createObjectURL(file));
-
-    gifshot.createGIF({
-      images: imageUrls,
-      gifWidth: size,
-      gifHeight: size,
-      interval: speed,
-      numWorkers: 2,
-      progressCallback: (p) => {
-        const percent = Math.round(p * 100);
-        progressBar.style.width = percent + "%";
-        statusText.textContent = `Procesando GIF: ${percent}%`;
-      }
-    }, function (obj) {
-      // Liberar memoria
-      imageUrls.forEach(url => URL.revokeObjectURL(url));
-
-      generateBtn.disabled = false;
-      generateBtn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles"></i> Generar GIF`;
-
-      if (!obj.error) {
-        statusText.textContent = "¡GIF generado con éxito!";
-        previewDiv.innerHTML = `
-          <div class="result-box">
-            <img src="${obj.image}" alt="GIF Creado">
-            <br>
-            <a href="${obj.image}" download="animacion.gif" class="btn-download">
-              <i class="fa-solid fa-download"></i> Descargar GIF
-            </a>
-          </div>
-        `;
-      } else {
-        statusContainer.style.display = "none";
-        alert("Ocurrió un error al procesar el GIF. Intenta reduciendo la resolución.");
-      }
+        ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, targetSize, targetSize);
+        resolve(canvas.toDataURL("image/jpeg", 0.85));
+      };
+      img.src = base64;
     });
-  }
-</script>
-
-</body>
-</html>
