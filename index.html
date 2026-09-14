@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Generador de GIF - Compatible con Móviles y HEIC</title>
+  <title>Generador de GIF Rápido</title>
   <style>
     :root {
       --primary: #2e7d32;
@@ -156,7 +156,7 @@
       height: 100%;
       background: var(--primary);
       width: 0%;
-      transition: width 0.15s;
+      transition: width 0.1s linear;
     }
 
     .status-text { text-align: center; font-size: 0.8rem; color: #666; }
@@ -193,7 +193,7 @@
 <div class="container">
   <div class="header">
     <h2>🎬 Generador de GIF</h2>
-    <p>Soporte para fotos de alta resolución y formatos HEIC</p>
+    <p>Conversión rápida y optimizada para móviles</p>
   </div>
 
   <div class="dropzone">
@@ -232,9 +232,7 @@
   <div id="preview"></div>
 </div>
 
-<!-- Librería para decodificación HEIC/HEIF de móviles -->
 <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
-<!-- Librería gifshot -->
 <script src="https://cdn.jsdelivr.net/npm/gifshot@0.3.2/build/gifshot.min.js"></script>
 
 <script>
@@ -252,17 +250,16 @@
     fileInput.disabled = true;
 
     for (let i = 0; i < files.length; i++) {
-      loadingText.textContent = `Procesando foto ${i + 1} de ${files.length}...`;
+      loadingText.textContent = `Optimizando foto ${i + 1} de ${files.length}...`;
       try {
         let fileToProcess = files[i];
 
-        // Conversión si es formato HEIC/HEIF
         const fileName = fileToProcess.name.toLowerCase();
         if (fileName.endsWith('.heic') || fileName.endsWith('.heif')) {
           const convertedBlob = await heic2any({
             blob: fileToProcess,
             toType: "image/jpeg",
-            quality: 0.7
+            quality: 0.6
           });
           fileToProcess = Array.isArray(convertedBlob) ? convertedBlob[0] : convertedBlob;
         }
@@ -280,7 +277,6 @@
     loadingText.style.display = "none";
   });
 
-  // Dibuja secuencialmente en Canvas reduciendo a 350px para liberar memoria RAM
   function processImageToCanvas(file) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -288,7 +284,7 @@
         const img = new Image();
         img.onload = () => {
           const canvas = document.createElement("canvas");
-          const targetSize = 350;
+          const targetSize = 300; // Ajustado a 300px para acelerar el algoritmo de compilación
           canvas.width = targetSize;
           canvas.height = targetSize;
 
@@ -298,7 +294,7 @@
           const sy = (img.height - minDim) / 2;
 
           ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, targetSize, targetSize);
-          resolve(canvas.toDataURL("image/jpeg", 0.7));
+          resolve(canvas.toDataURL("image/jpeg", 0.6));
         };
         img.onerror = reject;
         img.src = e.target.result;
@@ -341,44 +337,48 @@
     const previewDiv = document.getElementById("preview");
 
     generateBtn.disabled = true;
-    generateBtn.textContent = "⏳ Uniendo fotogramas...";
+    generateBtn.textContent = "⏳ Creando GIF...";
     statusContainer.style.display = "block";
-    progressBar.style.width = "10%";
-    statusText.textContent = "Codificando archivo GIF...";
+    progressBar.style.width = "15%";
+    statusText.textContent = "Compilando animación...";
     previewDiv.innerHTML = "";
 
-    gifshot.createGIF({
-      images: processedFrames,
-      gifWidth: size,
-      gifHeight: size,
-      interval: speed,
-      numWorkers: 0,
-      progressCallback: (p) => {
-        const percent = Math.round(p * 100);
-        progressBar.style.width = percent + "%";
-        statusText.textContent = `Generando GIF: ${percent}%`;
-      }
-    }, function (obj) {
-      generateBtn.disabled = false;
-      generateBtn.textContent = "⚡ Generar GIF";
+    // Forzamos la asincronía en el DOM antes de lanzar gifshot para que no congele la UI
+    setTimeout(() => {
+      gifshot.createGIF({
+        images: processedFrames,
+        gifWidth: size,
+        gifHeight: size,
+        interval: speed,
+        sampleInterval: 15, // Acelera la paleta de colores x3 para procesar imágenes en segundos
+        numWorkers: 2,
+        progressCallback: (p) => {
+          const percent = Math.round(p * 100);
+          progressBar.style.width = percent + "%";
+          statusText.textContent = `Generando GIF: ${percent}%`;
+        }
+      }, function (obj) {
+        generateBtn.disabled = false;
+        generateBtn.textContent = "⚡ Generar GIF";
 
-      if (!obj.error) {
-        progressBar.style.width = "100%";
-        statusText.textContent = "¡Completado con éxito!";
-        previewDiv.innerHTML = `
-          <div class="result-box">
-            <img src="${obj.image}" alt="GIF Resultante">
-            <br>
-            <a href="${obj.image}" download="animacion.gif" class="btn-download">
-              ⬇ Descargar GIF
-            </a>
-          </div>
-        `;
-      } else {
-        statusContainer.style.display = "none";
-        alert("Ocurrió un error al compilar el GIF.");
-      }
-    });
+        if (!obj.error) {
+          progressBar.style.width = "100%";
+          statusText.textContent = "¡GIF creado exitosamente!";
+          previewDiv.innerHTML = `
+            <div class="result-box">
+              <img src="${obj.image}" alt="GIF Resultante">
+              <br>
+              <a href="${obj.image}" download="animacion.gif" class="btn-download">
+                ⬇ Descargar GIF
+              </a>
+            </div>
+          `;
+        } else {
+          statusContainer.style.display = "none";
+          alert("Ocurrió un error al compilar el GIF.");
+        }
+      });
+    }, 100);
   }
 </script>
 
