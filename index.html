@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Generador de GIF Ultra Estable</title>
+  <title>Generador de GIF Definitivo</title>
   <style>
     :root {
       --primary: #2e7d32;
@@ -55,6 +55,15 @@
       top: 0; left: 0; width: 100%; height: 100%;
       opacity: 0;
       cursor: pointer;
+    }
+
+    #loadingText {
+      display: none;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--primary);
+      margin-top: 8px;
+      font-weight: 600;
     }
 
     .preview-grid {
@@ -149,7 +158,7 @@
       height: 100%;
       background: var(--primary);
       width: 0%;
-      transition: width 0.1s;
+      transition: width 0.15s;
     }
 
     .status-text { text-align: center; font-size: 0.8rem; color: #666; }
@@ -185,14 +194,15 @@
 
 <div class="container">
   <div class="header">
-    <h2>🎬 Generador de GIF Ultra Estable</h2>
-    <p>Subida múltiple optimizada para móviles</p>
+    <h2>🎬 Generador de GIF</h2>
+    <p>Subida masiva estable para dispositivos móviles</p>
   </div>
 
   <div class="dropzone">
-    <p>📁 <strong>Haz clic aquí</strong> para seleccionar múltiples imágenes</p>
+    <p>📁 <strong>Haz clic aquí</strong> para seleccionar imágenes</p>
     <input type="file" id="images" multiple accept="image/*">
   </div>
+  <div id="loadingText">Procesando imágenes...</div>
 
   <div class="preview-grid" id="previewGrid"></div>
 
@@ -200,9 +210,9 @@
     <div class="form-group">
       <label for="resolution">Resolución (px)</label>
       <select id="resolution">
-        <option value="250">250 x 250 (Ultrarrápida)</option>
+        <option value="250">250 x 250 (Ligera)</option>
         <option value="350" selected>350 x 350 (Recomendada)</option>
-        <option value="500">500 x 500 (HD)</option>
+        <option value="450">450 x 450 (Alta)</option>
       </select>
     </div>
 
@@ -218,88 +228,99 @@
     <div class="progress-bar-wrap">
       <div class="progress-bar-fill" id="progressBar"></div>
     </div>
-    <div class="status-text" id="statusText">Procesando...</div>
+    <div class="status-text" id="statusText">Iniciando...</div>
   </div>
 
   <div id="preview"></div>
 </div>
 
-<!-- Usamos gif.js en lugar de gifshot para procesamiento directo en Canvas -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gifshot@0.3.2/build/gifshot.min.js"></script>
 
 <script>
-  let imageFiles = []; 
+  let processedFrames = []; // Guardará las imágenes ya recortadas y optimizadas en Base64
 
   const fileInput = document.getElementById("images");
   const previewGrid = document.getElementById("previewGrid");
+  const loadingText = document.getElementById("loadingText");
 
-  fileInput.addEventListener("change", (e) => {
+  fileInput.addEventListener("change", async (e) => {
     const files = Array.from(e.target.files).filter(f => f.type.startsWith('image/'));
     if (!files.length) return;
 
-    files.forEach(file => {
-      imageFiles.push({
-        file: file,
-        url: URL.createObjectURL(file) // Carga inmediata en memoria sin Base64
-      });
-    });
+    loadingText.style.display = "block";
+    fileInput.disabled = true;
+
+    for (let i = 0; i < files.length; i++) {
+      loadingText.textContent = `Optimizando foto ${i + 1} de ${files.length}...`;
+      try {
+        // Redimensiona individualmente cada foto al seleccionarla
+        const base64Canvas = await resizeAndCompressFile(files[i], 400);
+        processedFrames.push(base64Canvas);
+        renderThumbnails();
+      } catch (err) {
+        console.error("Error al procesar archivo:", err);
+      }
+    }
 
     fileInput.value = "";
-    renderThumbnails();
+    fileInput.disabled = false;
+    loadingText.style.display = "none";
   });
 
+  // Convierte el archivo nativo a un Canvas liviano único para evitar problemas de memoria o rotura de imágenes
+  function resizeAndCompressFile(file, targetSize) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          canvas.width = targetSize;
+          canvas.height = targetSize;
+          const ctx = canvas.getContext("2d");
+
+          // Recorte proporcional centrado
+          const minDim = Math.min(img.width, img.height);
+          const sx = (img.width - minDim) / 2;
+          const sy = (img.height - minDim) / 2;
+
+          ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, targetSize, targetSize);
+          resolve(canvas.toDataURL("image/jpeg", 0.8));
+        };
+        img.onerror = reject;
+        img.src = e.target.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
   function removeFile(index) {
-    URL.revokeObjectURL(imageFiles[index].url);
-    imageFiles.splice(index, 1);
+    processedFrames.splice(index, 1);
     renderThumbnails();
   }
 
   function renderThumbnails() {
     previewGrid.innerHTML = "";
-    imageFiles.forEach((item, index) => {
+    processedFrames.forEach((src, index) => {
       const thumb = document.createElement("div");
       thumb.className = "thumb-item";
       thumb.innerHTML = `
-        <img src="${item.url}" alt="Img ${index + 1}">
+        <img src="${src}" alt="Img ${index + 1}">
         <button class="remove-btn" onclick="removeFile(${index})">✕</button>
       `;
       previewGrid.appendChild(thumb);
     });
   }
 
-  // Carga y dibuja de forma segura en un canvas antes de enviarlo al codificador
-  function loadImageToCanvas(item, targetSize) {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        canvas.width = targetSize;
-        canvas.height = targetSize;
-        const ctx = canvas.getContext("2d");
-
-        // Recorte cuadrado proporcional centrado
-        const minDim = Math.min(img.width, img.height);
-        const sx = (img.width - minDim) / 2;
-        const sy = (img.height - minDim) / 2;
-
-        ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, targetSize, targetSize);
-        resolve(canvas);
-      };
-      img.onerror = reject;
-      img.src = item.url;
-    });
-  }
-
-  async function generateGIF() {
-    if (!imageFiles.length) {
+  function generateGIF() {
+    if (!processedFrames.length) {
       alert("Por favor, selecciona al menos una imagen.");
       return;
     }
 
     const size = parseInt(document.getElementById("resolution").value);
     const speed = parseFloat(document.getElementById("speed").value);
-    const delay = Math.round(speed * 1000); // Milisegundos
-
     const generateBtn = document.getElementById("generateBtn");
     const statusContainer = document.getElementById("statusContainer");
     const progressBar = document.getElementById("progressBar");
@@ -307,62 +328,45 @@
     const previewDiv = document.getElementById("preview");
 
     generateBtn.disabled = true;
-    generateBtn.textContent = "⏳ Generando...";
+    generateBtn.textContent = "⏳ Uniendo fotogramas...";
     statusContainer.style.display = "block";
-    progressBar.style.width = "5%";
-    statusText.textContent = "Procesando fotogramas...";
+    progressBar.style.width = "10%";
+    statusText.textContent = "Codificando archivo GIF...";
     previewDiv.innerHTML = "";
 
-    try {
-      const gif = new GIF({
-        workers: 2,
-        quality: 10,
-        width: size,
-        height: size,
-        workerScript: "https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.worker.js"
-      });
-
-      for (let i = 0; i < imageFiles.length; i++) {
-        const canvas = await loadImageToCanvas(imageFiles[i], size);
-        gif.addFrame(canvas, { delay: delay, copy: true });
-        
-        const percent = Math.round(((i + 1) / imageFiles.length) * 50);
+    // gifshot sin workers para garantizar máxima compatibilidad en navegadores móviles
+    gifshot.createGIF({
+      images: processedFrames,
+      gifWidth: size,
+      gifHeight: size,
+      interval: speed,
+      numWorkers: 0, 
+      progressCallback: (p) => {
+        const percent = Math.round(p * 100);
         progressBar.style.width = percent + "%";
-        statusText.textContent = `Procesando imagen ${i + 1} de ${imageFiles.length}...`;
+        statusText.textContent = `Generando GIF: ${percent}%`;
       }
+    }, function (obj) {
+      generateBtn.disabled = false;
+      generateBtn.textContent = "⚡ Generar GIF";
 
-      gif.on('progress', function (p) {
-        const percent = 50 + Math.round(p * 50);
-        progressBar.style.width = percent + "%";
-        statusText.textContent = `Compilando GIF: ${percent}%`;
-      });
-
-      gif.on('finished', function (blob) {
-        generateBtn.disabled = false;
-        generateBtn.textContent = "⚡ Generar GIF";
+      if (!obj.error) {
         progressBar.style.width = "100%";
-        statusText.textContent = "¡GIF creado exitosamente!";
-
-        const gifUrl = URL.createObjectURL(blob);
+        statusText.textContent = "¡Completado con éxito!";
         previewDiv.innerHTML = `
           <div class="result-box">
-            <img src="${gifUrl}" alt="GIF Creado">
+            <img src="${obj.image}" alt="GIF Resultante">
             <br>
-            <a href="${gifUrl}" download="animacion.gif" class="btn-download">
+            <a href="${obj.image}" download="animacion.gif" class="btn-download">
               ⬇ Descargar GIF
             </a>
           </div>
         `;
-      });
-
-      gif.render();
-
-    } catch (err) {
-      generateBtn.disabled = false;
-      generateBtn.textContent = "⚡ Generar GIF";
-      statusContainer.style.display = "none";
-      alert("Error inesperado al crear el GIF. Intenta con imágenes más livianas.");
-    }
+      } else {
+        statusContainer.style.display = "none";
+        alert("Ocurrió un error al compilar el GIF.");
+      }
+    });
   }
 </script>
 
