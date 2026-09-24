@@ -5,6 +5,8 @@
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=flat-square&logo=javascript&logoColor=black)
 ![Client Side Only](https://img.shields.io/badge/Processing-100%25%20Client--Side-brightgreen?style=flat-square)
 ![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)
+[![Demo en vivo](https://img.shields.io/badge/Demo_en_vivo-Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://generador-gif.vercel.app)
+
 
 Una herramienta web moderna, liviana y ultrarrápida para convertir múltiples imágenes en un GIF animado directamente desde el navegador. Diseñada con un enfoque *mobile-first*, procesamiento de memoria optimizado y privacidad total al no requerir servidores backend.
 
